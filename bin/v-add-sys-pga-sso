@@ -67,7 +67,7 @@ apikey=$($BIN/v-add-access-key "$ROOT_USER" 'phppgadmin-sso' 'phpPgAdmin' 'plain
 # copy hestia-sso.php to /usr/share/phppgadmin/
 cp -f $HESTIA_INSTALL_DIR/pga/hestia-sso.php $PGA_INSTALL/hestia-sso.php
 chmod 640 $PGA_INSTALL/hestia-sso.php
-chown root:www-data $PGA_INSTALL/hestia-sso.php
+chown root:hestiamail $PGA_INSTALL/hestia-sso.php
 
 sed -i "s/%PHPPGADMIN_KEY%/$phppgadminkey/g" $PGA_INSTALL/hestia-sso.php
 sed -i "s/%API_KEY%/$apikey/g" $PGA_INSTALL/hestia-sso.php

@@ -43,7 +43,7 @@ fi
 #                       Action                             #
 #----------------------------------------------------------#
 
-apikey=$(grep -Po 'define\("API_KEY", "\K[^"]+' $PGA_INSTALL/hestia-sso.php)
+apikey=$(grep -Po 'define\("API_KEY", "\K[^"]+' $PGA_INSTALL/hestia-sso.php | cut -d: -f1)
 
 if [ -n "$apikey" ]; then
 	$BIN/v-delete-access-key "$apikey"

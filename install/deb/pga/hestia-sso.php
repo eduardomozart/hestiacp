@@ -163,7 +163,7 @@ if (!empty($_GET)) {
 	} elseif (isset($_GET["user"]) && isset($_GET["hestia_token"])) {
 		$database = $_GET["database"];
 		$user = $_GET["user"];
-		$host = "localhost";
+		$host = !empty($_GET["host"]) ? $_GET["host"] : "localhost";
 		$token = $_GET["hestia_token"];
 		if (is_numeric($_GET["exp"])) {
 			$time = $_GET["exp"];
@@ -183,29 +183,27 @@ if (!empty($_GET)) {
 				$_SESSION["HESTIA_sso_user"] = $user;
 				$_SESSION["HESTIA_sso_host"] = $host;
 
-				$pga_base = dirname($_SERVER["PHP_SELF"]);
-				$pga_login_url = $pga_base . "/redirect.php";
-				$dbuser = htmlspecialchars($data->login->user, ENT_QUOTES, "UTF-8");
-				$dbpass = htmlspecialchars($data->login->password, ENT_QUOTES, "UTF-8");
-				$dbname = htmlspecialchars($database, ENT_QUOTES, "UTF-8");
+				// Close Hestia's session so lib.inc.php doesn't destroy it or overwrite it
 				@session_write_close();
-				?>
-<!DOCTYPE html>
-<html>
-<head><title>Redirecting...</title></head>
-<body>
-<form id="pga_sso_form" method="post" action="<?= $pga_login_url ?>">
-	<input type="hidden" name="server" value="0">
-	<input type="hidden" name="loginServer" value="0">
-	<input type="hidden" name="loginUsername" value="<?= $dbuser ?>">
-	<input type="hidden" name="loginPassword" value="<?= $dbpass ?>">
-	<input type="hidden" name="loginDatabase" value="<?= $dbname ?>">
-	<input type="hidden" name="action" value="login">
-</form>
-<script>document.getElementById('pga_sso_form').submit();</script>
-</body>
-</html>
-				<?php
+
+				// Switch to phpPgAdmin's session namespace BEFORE including lib.inc.php
+				session_name("PPA_ID");
+
+				// Authenticate phpPgAdmin directly in its session
+				$_no_db_connection = true;
+				require_once "./libraries/lib.inc.php";
+
+				$server_id = $host . ":5432:allow";
+				$server_info = $misc->getServerInfo($server_id);
+				$server_info["username"] = $data->login->user;
+				$server_info["password"] = $data->login->password;
+				$misc->setServerInfo(null, $server_info, $server_id);
+
+				$pga_base = dirname($_SERVER["PHP_SELF"]);
+				$pga_login_url = $pga_base . "/index.php";
+				@session_write_close();
+
+				header("Location: " . $pga_login_url);
 				die();
 			} else {
 				session_invalid();
